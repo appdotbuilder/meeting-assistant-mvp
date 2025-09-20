@@ -1,11 +1,12 @@
+import { db } from '../db';
+import { meetingsTable } from '../db/schema';
 import { type CreateMeetingInput, type Meeting } from '../schema';
 
-export async function createMeeting(input: CreateMeetingInput): Promise<Meeting> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new meeting record in the database.
-    // This will create a new meeting entry that can later be processed with audio/text.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createMeeting = async (input: CreateMeetingInput): Promise<Meeting> => {
+  try {
+    // Insert meeting record
+    const result = await db.insert(meetingsTable)
+      .values({
         title: input.title,
         description: input.description || null,
         audio_file_path: input.audio_file_path || null,
@@ -14,8 +15,15 @@ export async function createMeeting(input: CreateMeetingInput): Promise<Meeting>
         tone_analysis: null, // Will be populated after AI processing
         action_items: null, // Will be populated after AI processing
         mind_map: null, // Will be populated after visualization
-        duration: null, // Will be calculated after audio processing
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Meeting);
-}
+        duration: null // Will be calculated after audio processing
+        // created_at and updated_at have default values in schema
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Meeting creation failed:', error);
+    throw error;
+  }
+};
